@@ -2,14 +2,14 @@
 ppattern="cirrus playback tuning"
 vpattern="cirrus voice tuning"
 product=mz6799_6m_v2_n
-prjdir=/home/zhongqinglong/workspace/d/svn/x30-l2
+prjdir=/opt/ubt-work/src/customer/meizu/x30-l2
 dir_output=output
-#DIR_TINYSYS=${prjdir}/vendor/mediatek/proprietary/tinysys/freertos/source/middleware/smartpa/CSPL
-#DIR_DRIVER=${prjdir}/kernel-4.4/drivers/misc/cspl
+DIR_TINYSYS=${prjdir}/vendor/mediatek/proprietary/tinysys/freertos/source/middleware/smartpa/CSPL
+DIR_DRIVER=${prjdir}/kernel-4.4/drivers/misc/cspl
 
 #TEST
-DIR_TINYSYS=.
-DIR_DRIVER=.
+#DIR_TINYSYS=.
+#DIR_DRIVER=.
 
 dir_out=${prjdir}/out/target/product/$product
 ftinysys=${DIR_TINYSYS}/cspl_task.h
@@ -109,6 +109,7 @@ function include_playback_tuning(){
 #Example: search-replace-line "$str" "$line" $file
 function search-replace-line(){
 	local line=$(sed -n "/$1/=" $3)
+	check_exit ${line:-null} "Error: No pattern in [$3]!!" "null" $LINENO
 	sed -i "${line}c ${2}" $3
 }
 
@@ -198,7 +199,7 @@ function cmd_2_array(){
 }
 
 function find-select-config(){
-	cmd_2_array "find . -name $1 -type f"
+	cmd_2_array "find $DIR_SRC -name $1 -type f"
 	#get the array lenght
 	local lines=${#CMDOUT_ARRAY[@]}
 	check_exit ${lines:-null} "Error: Can not find $1!!" "invert" $LINENO
