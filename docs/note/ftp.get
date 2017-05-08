@@ -1,0 +1,1 @@
+wget -nH -m ftp://username:password@ftp.wolfsonmicro.com/*

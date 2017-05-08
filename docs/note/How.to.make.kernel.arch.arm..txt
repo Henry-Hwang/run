@@ -1,0 +1,9 @@
+How to compile linux kernel (Arch ARM)
+1. git kernel from remote repo (/opt/work/msm-3.10)
+2. find a exsit android project in you ubuntu "/opt/work/android/"
+3. make a link (ln -s /opt/work/msm-3.10 /opt/work/android/kernel) 
+4. cd /opt/work/android/
+5. source build/envsetup.sh
+6. lunch aosp_xxx  (aosp_arm-eng)
+7. make -C kernel O=../out/ ARCH=arm CROSS_COMPILE=arm-eabi- msm8974_f1_defconfig
+8. make -C kernel O=../out/ ARCH=arm CROSS_COMPILE=arm-eabi- -j8
