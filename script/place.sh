@@ -2,7 +2,7 @@
 ppattern="cirrus playback tuning"
 vpattern="cirrus voice tuning"
 product=mz6799_6m_v2_n
-prjdir=/opt/ubt-work/src/customer/meizu/x30-l2
+prjdir=~/workspace/src/x30
 dir_output=output
 DIR_TINYSYS=${prjdir}/vendor/mediatek/proprietary/tinysys/freertos/source/middleware/smartpa/CSPL
 DIR_DRIVER=${prjdir}/kernel-4.4/drivers/misc/cspl

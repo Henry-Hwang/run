@@ -32,22 +32,13 @@ speak	B	2	1835	3
 zhongqinglong@zhongqinglong:~/workspace/d/x30-l2/out/target/product/mz6799_6m_v2_n/obj/TINYSYS_OBJ/tinysys-scp_intermediates/freertos/source/CM4_B/drivers/common/audio/tasks/spkprotect$ arm-linux-androideabi-objdump -S audio_task_speaker_protection.o
 
 ~~~script
-							InterleaveData(2, processingframebytes, -8, ppLRBuffers, (int32_t *)audioLinearBuf + (2*i*Processingframecount));
- d24:	00000000 	.word	0x00000000
- d28:	0000029e 	.word	0x0000029e
- d2c:	000002d3 	.word	0x000002d3
- d30:	00000000 	.word	0x00000000
- d34:	00000308 	.word	0x00000308
-	...
-						processingframebytes = frame_to_bytes(Processingframecount, uSpeaker_Protection_Info.mdlchannel,
-																uSpeaker_Protection_Info.mdlformat);
-						processingIVframebytes = frame_to_bytes(Processingframecount, uSpeaker_Protection_Info.mdlchannel,
-																Soc_Aud_I2S_WLEN_WLEN_32BITS);
-						int i;
-						for (i = 0; i < 21; i++) {
- d58:	00000325 	.word	0x00000325
- d5c:	00000000 	.word	0x00000000
+henry@Dell5510:~/workspace/docs/cirrus/patch$ size audio_task_speaker_protection.o
+   text	   data	    bss	    dec	    hex	filename
+   9248	      4	  16974	  26226	   6672	audio_task_speaker_protection.o
 
+henry@Dell5510:~/workspace/docs/cirrus/patch$ size ../libcspl/libcspl.a
+   text	   data	    bss	    dec	    hex	filename
+  12768	    300	      4	  13072	   3310	block_table.o (ex ../libcspl/libcspl.a)
 ~~~
 ##Remove VOW from SCP B
 /device/mediatek$ git diff
@@ -105,7 +96,7 @@ index 51ac7ca..3e23259 100644
 
 ~~~
 
-##Adb Volume
+##Adb Volume (simulate KEY)
 ~~~script
 input keyevent VOLUME_UP
 input keyevent VOLUME_DOWN
