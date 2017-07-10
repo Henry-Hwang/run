@@ -8,6 +8,35 @@
 |  AIF1       	| 59        |    59  	|
 |  Total        			| 21543  |    18263  	|
 
+    M1781 Audio Block Diagram:
+    +-----------------------+          +-------------------+
+    |                       |          |                   |
+    |    SDM660             |          |  External Codec   |
+    |                       |          |  (CS47L35)        +-->Headphone
+    |                       |          |                   |
+    |                       |          |   +-------------+ +-->Main_MIC
+    |       +-----------+   |          |   |Sound Trigger| |
+    |       |           | MI2S3      AIF1  +-------------+ +-->Sub_MIC
+    |       |           |   <---------->                   |
+    |       |           |   |          |   +-------------+AIF2 +--------+
+    |       |           |   |          |   |Press & Motor| +--->Motor PA+-->Motor
+    |       |           |   |          |   +-------------+ |   +--------+
+    |       |           |   |          |                   |
+    |       |           |   |          +-------------------+
+    |       |  Hexagon  |   |
+    |       |  aDSP     |   |          +-------------------+
+    |       |           |  PDM         |                   |
+    |       |           |   <---------->  Internal Cocec   +-->Earphone
+    |       |           |   |          |  (PM660A Codec)   |
+    |       |           |   |          +-------------------+
+    |       |           |   |
+    |       |           |   |          +-------------------+
+    |       |           | MI2S2        |                   |
+    |       |           |   <---------->    Speaker PA     +-->Speaker
+    |       +-----------+   |          |    (CS35L35)      |
+    +-----------------------+          +-------------------+
+
+
 ##Tinyplay Test
 ~~~script
 Speaker:
@@ -45,7 +74,79 @@ HeadsetMIC Record:
         tinymix "HPOUT1 Digital Switch" 1
         tinymix "HP Switch" 1   
 ~~~
+##Smart PA Test
+```script
+		tinymix "CIRRUS GB ENABLE" "Config GB Disable" \
+		&& tinymix "FBProtect Port" "SEC_MI2S_RX" \
+		&& sleep 1 \
+		&& tinymix "SEC_MI2S_RX Audio Mixer MultiMedia1" 1 \
+		&& sleep 2 \
+		&& tinymix "CIRRUS GB ENABLE" "Config GB Enable" \
+		&& tinyplay /sdcard/Music/cirrus/music/ChuanGe48K.wav &
+```
+```script
+		tinymix "CIRRUS GB ENABLE" "Config GB Disable" \
+		&& tinymix "FBProtect Port" "SEC_MI2S_RX" \
+		&& sleep 1 \
+		&& tinymix "SEC_MI2S_RX Audio Mixer MultiMedia1" 1 \
+		&& sleep 2 \
+		&& tinymix "CIRRUS GB ENABLE" "Config GB Enable" \
+		&& tinymix "CIRRUS GB EXT CONFIG" "Config RX New" \
+		&& tinymix "CIRRUS GB EXT CONFIG" "Config TX New" \
+		&& tinymix "CIRRUS GB CONFIG" "Path_for_Music" \		
+		&& tinyplay /sdcard/Music/cirrus/music/ChuanGe48K.wav &
+```
+```script
+		tinymix 'CIRRUS GB CONFIG' 'Run Diag'
+		tinymix 'CIRRUS GB CONFIG' 'Set Temp Cal' 
+		tinymix 'CIRRUS GB CONFIG' 'Get Current Temp' 
+		tinymix 'CIRRUS GB CONFIG' 'Set Fo Cal'
+		tinymix 'CIRRUS GB CONFIG' 'Path_for_Music'
+		tinymix 'CIRRUS GB CONFIG' 'Path_for_Voice'
+		tinymix 'CIRRUS GB CONFIG' 'Path_for_Dolby'
+```
 
+##Tone To Headphone
+
+~~~script
+		tinymix "HPOUT1L Input 1" "Tone Generator 1"
+		tinymix "HPOUT1 Digital Switch" 1
+		tinymix "HP Switch" 1 
+~~~
+##Record Force Sensor data
+~~~script
+		tinymix "MultiMedia1 Mixer TERT_MI2S_TX" 1
+		tinymix "IN1L Mux" "A"
+		tinymix "AIF1TX1 Input 1 Volume" "47"
+		tinymix "AIF1TX1 Input 1" "IN1L"
+		tinymix "AIF1TX2 Input 1" "IN1L"
+		tinymix "Haptic Mic Switch" "1"
+		tinymix "IN1L Volume" "30"
+		tinymix "IN1L Digital Volume" "190"
+		tinycap /data/cirrus/cirrus-rec-test.wav &
+~~~
+##Enable machine QDSP kernel log
+```script
+#!/bin/bash
+#adb shell
+#mount -t debugfs debugfs /sys/kernel/debug
+adb wait-for-device
+adb root
+adb remount
+adb shell "echo file q6afe.c +p > /sys/kernel/debug/dynamic_debug/control"
+adb shell "echo file q6adm.c +p > /sys/kernel/debug/dynamic_debug/control"
+adb shell "echo file q6asm.c +p > /sys/kernel/debug/dynamic_debug/control"
+adb shell "echo file audio_acdb.c +p > /sys/kernel/debug/dynamic_debug/control"
+adb shell "echo file msm-pcm-q6-v2.c +p > /sys/kernel/debug/dynamic_debug/control"
+adb shell "echo file msm-pcm-routing-v2.c +p > /sys/kernel/debug/dynamic_debug/control"
+adb shell "echo file msm-cirrus-playback.c +p > /sys/kernel/debug/dynamic_debug/control"
+```
+##Enable QDSP log on QXDM
+View------>Common---->massage View
+Right click on Massage View window, config---->Massage Packet, On right window ticket QDSP6,  there is a list under QDSP6, tick 
+##Enable PCM loging
+View------>Common---->massage View
+Right click on Massage View window, config---->Log Packet---->Common----->ADSP----->QTI---->1586
 ##Code Size
 zhongqinglong@zhongqinglong:~/workspace/d/x30-l2/out/target/product/mz6799_6m_v2_n/obj/TINYSYS_OBJ/tinysys-scp_intermediates/freertos/source/CM4_B/drivers/common/audio/tasks/spkprotect$ arm-linux-androideabi-objdump -S audio_task_speaker_protection.o
 
@@ -67,115 +168,38 @@ zhongqinglong@zhongqinglong:~/workspace/d/x30-l2/out/target/product/mz6799_6m_v2
  d5c:	00000000 	.word	0x00000000
 
 ~~~
-##Remove VOW from SCP B
-/device/mediatek$ git diff
-~~~patch
-
-diff --git a/mz6799_6m_v2_n/ProjectConfig.mk b/mz6799_6m_v2_n/ProjectConfig.mk
-index 21e3b49..3d2f393 100755
---- a/mz6799_6m_v2_n/ProjectConfig.mk
-+++ b/mz6799_6m_v2_n/ProjectConfig.mk
-@@ -669,7 +669,7 @@ MTK_VOIP_ENHANCEMENT_SUPPORT = yes
- MTK_VOIP_HANDSFREE_DMNR = yes
- MTK_VOIP_NORMAL_DMNR = yes
- MTK_VOLTE_SUPPORT = yes
--MTK_VOW_SUPPORT = yes
-+MTK_VOW_SUPPORT = no
- MTK_VPU_SUPPORT = yes
- MTK_VR_HIGH_PERFORMANCE_SUPPORT = no
- MTK_VSS_SUPPORT = no
-
-
+##make adsp
+~/workspace/M1781/amss/ADSP.VT.4.0/adsp_proc
+~~~script
+python build/build.py -c sdm660 -o all
 ~~~
-kernel-4.4$ git diff
-~~~patch
+##push ADSP firmware
+```script
+adb wait-for-device
+adb root
+adb remount
+adb shell "umount /firmware/"
+adb shell "mount -o rw /dev/block/bootdevice/by-name/modem_a /firmware"
+adb shell "rm /firmware/image/adsp.*"
+adb push /home/sep/workspace/M1781/amss/ADSP.VT.4.0/adsp_proc/obj/qdsp6v5_ReleaseG/660.adsp.prod/signed/LA/system/etc/firmware/  /firmware/image
+adb shell "ls -l /firmware/image | grep adsp"
+adb reboot
+```
+##Install adsp
+Installed "/home/sep/workspace/M1781/ADSP.VT.4.0/adsp_proc/build/bsp/multi_pd_img/build/660.adsp.prod/sign_and_encrypt/default/adsp/dsp2.mbn" to "/home/sep/workspace/M1781/ADSP.VT.4.0/adsp_proc/obj/qdsp6v5_ReleaseG/660.adsp.prod/signed_encrypted/adsp.mbn"
+##Start QXDM
+```script
+sudo /usr/QXDM/QXDM
+sudo /Applications/QCAT/QCAT/bin/QCAT
+```
+##Adb WISCE bridge
+```script
 
-diff --git a/arch/arm64/configs/mz6799_6m_v2_n_debug_defconfig b/arch/arm64/configs/mz6799_6m_v2_n_debug_defconfig
-index fffe943..ae23bfe 100644
---- a/arch/arm64/configs/mz6799_6m_v2_n_debug_defconfig
-+++ b/arch/arm64/configs/mz6799_6m_v2_n_debug_defconfig
-@@ -365,7 +365,7 @@ CONFIG_HMP_TRACER=y
- CONFIG_SCHED_HMP_PLUS=y
- CONFIG_MTK_SYSENV=y
- CONFIG_MICROTRUST_TEE_SUPPORT=y
--CONFIG_MTK_VOW_SUPPORT=y
-+#CONFIG_MTK_VOW_SUPPORT=y
- CONFIG_MTK_FIQ_CACHE=y
- CONFIG_MOTOR_DRV260X=y
- CONFIG_MEIZU_RPMB_CTL_DRV=y
-
-~~~
-/vendor/mediatek/proprietary/tinysys/freertos/source$ git diff
-~~~patch
-diff --git a/project/CM4_B/mt6799/mz6799_6m_v2_n/ProjectConfig.mk b/project/CM4_B/mt6799/mz6799_6m_v2_n/ProjectConfig.mk
-index 51ac7ca..3e23259 100644
---- a/project/CM4_B/mt6799/mz6799_6m_v2_n/ProjectConfig.mk
-+++ b/project/CM4_B/mt6799/mz6799_6m_v2_n/ProjectConfig.mk
-@@ -10,7 +10,7 @@
- # **** DO NOT **** define anything other than configuration options here.
- # If you need to customize project-specific source files, compiler flags
- # or required libraries, add them to CompilerOption.mk.
--CFG_MTK_VOW_SUPPORT = yes
-+CFG_MTK_VOW_SUPPORT = no
- CFG_SLEEP_SUPPORT = yes
- CFG_UART_SUPPORT = no
- CFG_SCP_UART1_SUPPORT = no
-
-~~~
-
+```
 ##Adb Volume
 ~~~script
 input keyevent VOLUME_UP
 input keyevent VOLUME_DOWN
-~~~
-##Bypass SCP
-~~~patch
-diff --git a/common/V3/aud_drv/AudioALSALoopbackController.cpp b/common/V3/aud_drv/AudioALSALoopbackController.cpp
-index 5e3cd1b..86956bd 100644
---- a/common/V3/aud_drv/AudioALSALoopbackController.cpp
-+++ b/common/V3/aud_drv/AudioALSALoopbackController.cpp
-@@ -14,10 +14,11 @@
- #ifdef MTK_CIRRUS_SPEAKER_SUPPORT
- #include "cspl_control.h"
- #include "MtkAudioComponent.h"
--#include <audio_memory_control.h>
-+
- #include <cutils/properties.h>
- #include "AudioMessengerIPI.h"
- #endif
-+#include <audio_memory_control.h>
- 
- #define ALIGN(x, a) ((x) + (a) - 1) & ~((a)-1)
- 
-@@ -794,10 +795,11 @@ status_t AudioALSALoopbackController::openPlaybackPcm(const audio_devices_t outp
-     {
-         pcmindex = AudioALSADeviceParser::getInstance()->GetPcmIndexByString(keypcmDl1SpkPlayback);
-         cardindex = AudioALSADeviceParser::getInstance()->GetCardIndexByString(keypcmDl1SpkPlayback);
--
--       pSpkIPI = AudioMessengerIPI::getInstance();
--       pSpkIPI->CSPLPlaybackConfig();
--       pSpkIPI->CSPLConfigSetup();
-+#if defined (MTK_CIRRUS_SPEAKER_SUPPORT)
-+          pSpkIPI = AudioMessengerIPI::getInstance();
-+          pSpkIPI->CSPLPlaybackConfig();
-+          pSpkIPI->CSPLConfigSetup();
-+#endif    
-     }
-     else
-     {
-diff --git a/mt6799/Android.mk b/mt6799/Android.mk
-index 93e19f1..0595dac 100755
---- a/mt6799/Android.mk
-+++ b/mt6799/Android.mk
-@@ -256,7 +256,7 @@ else
-     ifeq ($(findstring cirrus, $(MTK_AUDIO_SPEAKER_PATH)), cirrus)
-       LOCAL_C_INCLUDES += $(MTK_PATH_SOURCE)/hardware/audio/vendor_cirrus
-       LOCAL_SHARED_LIBRARIES += libcspl_control
--      LOCAL_CFLAGS += -DMTK_CIRRUS_SPEAKER_SUPPORT
-+      #LOCAL_CFLAGS += -DMTK_CIRRUS_SPEAKER_SUPPORT
-       LOCAL_CFLAGS += -DEXTCODEC_ECHO_REFERENCE_SUPPORT
-     endif
-
 ~~~
 ##Calibration test
 - Put speaker_cal.wav into /data/data/
