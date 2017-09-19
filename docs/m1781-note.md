@@ -147,6 +147,18 @@ Right click on Massage View window, config---->Massage Packet, On right window t
 ##Enable PCM loging
 View------>Common---->massage View
 Right click on Massage View window, config---->Log Packet---->Common----->ADSP----->QTI---->1586
+##QACT ISF to WAV
+
+View------>Vocoder Playback---->Process
+##ADCB
+- path in linux file system
+~~~script
+/etc/acdbdata/MTP
+~~~
+- path in android project
+~~~script
+vendor/qcom/proprietary/mm-audio/audcal/family-b/acdbdata/sdm660/MTP/
+~~~
 ##Code Size
 zhongqinglong@zhongqinglong:~/workspace/d/x30-l2/out/target/product/mz6799_6m_v2_n/obj/TINYSYS_OBJ/tinysys-scp_intermediates/freertos/source/CM4_B/drivers/common/audio/tasks/spkprotect$ arm-linux-androideabi-objdump -S audio_task_speaker_protection.o
 
@@ -192,9 +204,9 @@ Installed "/home/sep/workspace/M1781/ADSP.VT.4.0/adsp_proc/build/bsp/multi_pd_im
 sudo /usr/QXDM/QXDM
 sudo /Applications/QCAT/QCAT/bin/QCAT
 ```
-##Adb WISCE bridge
+##Adb Disable Verity
 ```script
-
+adb disable-verity 
 ```
 ##Adb Volume
 ~~~script
