@@ -1,0 +1,14 @@
+UltraEdit
+
+Find and replace --> regular expression --> tick
+
+Place the regular expression in the source string dialog, see bellow:
+
+%*string*^p
+or
+%*string*^n
+
+place the target string in the target dialog.
+
+
+
