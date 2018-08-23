@@ -1,0 +1,90 @@
+#!/bin/bash
+
+# use in high rate
+export ATOOLS_DIR=/opt/work/src/ripple/python/audio-tools
+export DROID_DIR=/opt/work/src/meizu/m1892
+export SHARE_DIR=/opt/work/share
+
+#Java setup
+export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64
+export JRE_HOME=${JAVA_HOME}/jre
+export CLASSPATH=.:${JAVA_HOME}/lib:${JRE_HOME}/lib
+export PATH=${JAVA_HOME}/bin:$PATH
+
+alias flash='. flash.sh'
+
+
+function tab-title() {
+	if [[ -z "$ORIG" ]]; then
+		ORIG=$PS1
+	fi
+	TITLE="\[\e]2;$*\a\]"
+	PS1=${ORIG}${TITLE}
+}
+
+function aproject() {
+	source build/envsetup.sh
+	lunch 16
+}
+
+function ainit-term() {
+	cd $DROID_DIR
+	aproject
+	cd -
+}
+
+function ainit() {
+	if [ $# = 1 ];then
+		ainit-term
+	fi
+		
+	adb wait-for-device
+	adb root
+	adb wait-for-device
+	adb disable-verity
+	adb wait-for-device
+	adb remount
+	adb wait-for-device
+	adb shell setenforce 0
+}
+
+function touch-pannel() {
+	if [ $# == 1 ];then
+		if [ $1 == 'on' ];then
+			xinput set-prop 'AlpsPS/2 ALPS DualPoint TouchPad' 'Device Enabled' 1
+			echo "Enable touch board"
+		elif [ $1 == 'off' ];then
+			xinput set-prop 'AlpsPS/2 ALPS DualPoint TouchPad' 'Device Enabled' 0
+			echo "Diable touch board"
+		fi
+	else
+		xinput list
+		echo "Args：on/off"
+		echo "Enable touch board：touch-pannel on"
+		echo "Diable touch board：touch-pannel off"
+	fi
+}
+
+
+
+# kill audio/media server
+# android will restart audio/media server and apply the latest setup
+# use for making new audio HAL take affect
+
+function akill-media() {
+	adb shell "pgrep -f mediaserver | xargs kill -9"
+	adb shell "pgrep -f audioserver | xargs kill -9"	
+}
+
+function ldmesg() {
+	ainit
+	while true
+	do
+		adb shell dmesg -c | grep -iE "$@"
+	done
+}
+
+
+function atool() {
+	python $ATOOLS_DIR/main.py $*
+}
